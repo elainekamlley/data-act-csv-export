@@ -1,0 +1,14 @@
+{
+  "name": "data-act-csv-export",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "author": "",
+  "license": "CC0",
+  "dependencies": {
+    "json2csv": "^2.2.1"
+  }
+}
