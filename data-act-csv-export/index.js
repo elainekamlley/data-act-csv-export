@@ -1,25 +1,40 @@
 var fs = require('fs');
+var http =require('http');
+
 var json2csv = require('json2csv');
 
-var fakeData = {
-  'issue number': 32,
-  'issue title': 'Something is wrong',
-  'comments': [
-    { },
-    { }
-  ]
-};
+var GH_URL = "https://api.github.com"
 
+console.log(1);
+http.get({
+  host: GH_URL,
+  path: "github.com/fedspendingtransparency/fedspendingtransparency.github.io/issues",
+}, function(response){
+  //continously update stream with data
+  var body ='';
+  response.on('data', function(data) {
+    body += data;
+  });
+  response.on('end', function(){
+    var parsed = JSON.parse(body);
+    convert(parsed);
+  });
+  console.log(body);
+  json2csv({ data: body, fields: ['issue number', 'issue title'] },
+      function(err, data) {
 
-json2csv({ data: fakeData, fields: ['issue number', 'issue title'] },
-    function(err, data) {
-
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-  console.log(data);
-  process.exit(0);
-
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    console.log(data);
+    fs.writeFile('./data.csv', data, function (err) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+      console.log('It\'s saved!');
+    });
+  });
 });
-
+console.log(3);
