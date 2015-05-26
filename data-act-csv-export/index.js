@@ -1,41 +1,65 @@
 var fs = require('fs');
-var http =require('http');
+var github =require('octonode');
 
 var json2csv = require('json2csv');
 
-var GH_URL = "https://api.github.com";
+var client = github.client(process.env.GITHUB_API_KEY);
 
-console.log(1);
-http.get({
-  host: GH_URL,
-  path: "repos/fedspendingtransparency/fedspendingtransparency.github.io/issues",
-}, function(response){
-  //continously update stream with data
-  var body ='';
-  response.on('data', function(data) {
-    body += data;
-  });
-  response.on('end', function(){
-    var parsed = JSON.parse(body);
-    convert(parsed);
-  });
-  console.log(2);
-  console.log(body);
-  json2csv({ data: body, fields: ["number", "title"] },
+var ghrepo = client.repo('fedspendingtransparency/fedspendingtransparency.github.io');
+
+ghrepo.issues({
+  state: 'all',
+}, function(err, body, status, headers) {
+  var issues = body;
+  for (var i = 0, ilen = issues.length; i < ilen; i++) {
+    var issue = issues[i],
+      issueData = {
+        "Issue Number": issue.number,
+        "Issue Title": issue.title, 
+        "Issue Description": issue.body,
+        "Data Element": issue.lables,
+        "Date Opened": issue.created_at,
+        "Date Closed": issue.closed_at,
+      };
+    json2csv({ data: issueData, fields: ['Issue Number', 'Issue Title', 'Issue Description', 'Data Element', 'Date Opened', 'Date Closed'] },
       function(err, data) {
-
-    if (err) {
-      console.error(err);
-      process.exit(1);
+        if (err) {
+              console.error(err);
+              process.exit(1);
+            }
+            console.log('in json2csv');
+            fs.writeFile('./data.csv', data, function (err) {
+              if (err) {
+                console.error(err);
+                process.exit(1);
+              }
+              console.log('It\'s saved!');
+    console.log(issueData);
+    var asyncFuncs = [];
+    for (var i = 0, ilen = list.lenghth; i < ilen; i++) {
+      var ghissue = client.issue('fedspendingtransparency/fedspendingtransparency.github.io', issue[i].number); 
+      asyncFuncs.push(ghissue.comments);
     }
-    console.log(data);
-    fs.writeFile('./data.csv', data, function (err) {
-      if (err) {
-        console.error(err);
-        process.exit(1);
+    when(asyncFuncs).then(function(err,body,headers) {
+      json2csv({ data: issueData, fields: ['Issue Number', 'Issue Title', 'Issue Description', 'Data Element', 'Date Opened', 'Date Closed'] },
+      function(err, data) {
+        if (err) {
+              console.error(err);
+              process.exit(1);
+            }
+            console.log('in json2csv');
+            fs.writeFile('./data.csv', data, function (err) {
+              if (err) {
+                console.error(err);
+                process.exit(1);
+              }
+              console.log('It\'s saved!');
+            });
       }
-      console.log('It\'s saved!');
-    });
+    }
   });
 });
-console.log(3);
+ 
+  
+
+
