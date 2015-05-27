@@ -52,6 +52,7 @@ ghrepo.issues({
                   "Comment": comment.body
                 };
             issueData['Comment'+ c] = comment.body;
+            issueData['CommentAuthor'+ c] = commentData.Author;
           };
           cb(err, commentData);
         });
@@ -59,20 +60,25 @@ ghrepo.issues({
     })(issue.number, issueData);
 	}
   async.series(commentsReqs, function(err, results) {
+  	var fields = ['Issue Number', 'Issue Title', 'Issue Description',
+               'Date Opened', 'Date Closed'];
+   	for (var c = 1, clen = 30; c < clen; c++){
+   		fields.push('CommentAuthor' + c);
+   		fields.push('Comment' + c);
+   	}
     console.log('error', err);
     if (err) {
       console.error(err);
       process.exit(1);
     }
     json2csv({ data: issuesData,
-               fields: ['Issue Number', 'Issue Title', 'Issue Description',
-               'Date Opened', 'Date Closed', 'Comment1', 'Comment2', 'Comment3'] },
+               fields: fields },
       function(err, data) {
         if (err) {
           console.error(err);
           process.exit(1);
         }
-        var fileName = './data' + (new Date()).toJSON() + '.csv';
+        var fileName = './GitHub-export' + (new Date()).toJSON() + '.csv';
         fs.writeFileSync(fileName, "");
         fs.appendFile(fileName, data, function (err) {
           if (err) {
