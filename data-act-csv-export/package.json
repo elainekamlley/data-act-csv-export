@@ -10,5 +10,9 @@
   "license": "CC0",
   "dependencies": {
     "json2csv": "^2.2.1"
+  },
+  "devDependencies": {
+    "async": "^1.0.0",
+    "octonode": "^0.6.17"
   }
 }

@@ -1,3 +1,4 @@
+var async = require('async');
 var fs = require('fs');
 var github =require('octonode');
 
@@ -15,47 +16,72 @@ ghrepo.issues({
 		console.error(err);
 		process.exit(1);
 	}
-	var issues = body;
-	var issuesData = [];
+	var issues = body,
+      issuesData = [],
+      commentsReqs = [];
+
 	for (var i = 0, ilen = issues.length; i < ilen; i++) {
 		var issue = issues[i],
 			issueData = {
 				"Issue Number": issue.number,
-				"Issue Title": issue.title, 
+				"Issue Title": issue.title,
 				"Issue Description": issue.body,
 				"Date Opened": issue.created_at,
 				"Date Closed": issue.closed_at,
 			};
 		issuesData.push(issueData);
+
+    (function(issueNumber, issueData) {
+      commentsReqs.push(function(cb) {
+        var currentIssue = client.issue(
+            'fedspendingtransparency/fedspendingtransparency.github.io',
+            issueNumber);
+        currentIssue.comments(function(err, body, headers) {
+          var comments = body,
+              commentData = '';
+          console.log('current', currentIssue.number);
+          console.log('comment error', err);
+          if (!comments) {
+            cb(err, comments);
+          }
+          for (var c = 0, clen = comments.length; c < clen; c++) {
+            var comment = comments[c],
+                commentData = {
+                  "Issue url": comment.issue_url,
+                  "Author": comment.user.login,
+                  "Comment": comment.body
+                };
+            issueData['Comment'+ c] = comment.body;
+          };
+          cb(err, commentData);
+        });
+      });
+    })(issue.number, issueData);
 	}
-	json2csv({ data: issuesData, fields: ['Issue Number', 'Issue Title', 'Issue Description', , 'Date Opened', 'Date Closed'] },
-		function(err, data) {
-			if (err) {
-	          console.error(err);
-	          process.exit(1);
-	        }
-	        console.log(data);
-	        var fileName = './data' + (new Date()).toJSON() + '.csv'; 
-	        fs.writeFileSync(fileName, "");
-	        fs.appendFile(fileName, data, function (err) {
-	          if (err) {
-	            console.error(err);
-	            process.exit(1);
-	          }
-	          console.log('It\'s saved!');
-		// var ghissue = client.issue('fedspendingtransparency/fedspendingtransparency.github.io', issue.number);
-		// 	ghissue.comments(function(err, body, status, headers) {
-		// 		var comments = body;
-		// 		for (var c = 0, clen = comments.length; c < clen; c++) {
-		// 			var comment = comments[c],
-		// 				commentData = {
-		// 					"Issue url": comment.issue_url,
-		// 					"Author": comment.user.login,
-		// 					"Comment": comment.body, 
-		// 				};
-		// 		};
-		// 	});
-			});
-	});		
+  async.series(commentsReqs, function(err, results) {
+    console.log('error', err);
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    json2csv({ data: issuesData,
+               fields: ['Issue Number', 'Issue Title', 'Issue Description',
+               'Date Opened', 'Date Closed', 'Comment1', 'Comment2', 'Comment3'] },
+      function(err, data) {
+        if (err) {
+          console.error(err);
+          process.exit(1);
+        }
+        var fileName = './data' + (new Date()).toJSON() + '.csv';
+        fs.writeFileSync(fileName, "");
+        fs.appendFile(fileName, data, function (err) {
+          if (err) {
+            console.error(err);
+            process.exit(1);
+          }
+          console.log('It\'s saved!');
+        });
+    });
+  });
 });
 
