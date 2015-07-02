@@ -18,12 +18,16 @@ ghrepo.issues({
 	}
 	var issues = body,
       issuesData = [],
-      commentsReqs = [];
+      commentsReqs = [],
+      fields = ['Issue Number', 'Issue Author', 'Issue Title', 'Issue Description',
+               'Date Opened', 'Date Closed'];
+
 
 	for (var i = 0, ilen = issues.length; i < ilen; i++) {
 		var issue = issues[i],
 			issueData = {
 				"Issue Number": issue.number,
+        "Issue Author":issue.user.login,
 				"Issue Title": issue.title,
 				"Issue Description": issue.body,
 				"Date Opened": issue.created_at,
@@ -51,8 +55,25 @@ ghrepo.issues({
                   "Author": comment.user.login,
                   "Comment": comment.body
                 };
-            issueData['Comment'+ c] = comment.body;
+            if (comment.body.length > 33000){
+              var commentBegin = comment.body.slice(0, 33000);
+              var commentRest = comment.body.slice(33001);
+              console.log('Begin comment');
+              console.log(commentBegin);
+              console.log('Rest Comment');
+              console.log(commentRest);
+              issueData['Comment'+ c] = commentBegin;
+              issueData['Comment More' + c] =commentRest;
+              fields.push('Comment' + c);
+              fields.push('Comment More' + c);
+            }
+            else {
+              issueData['Comment'+ c] = comment.body;
+              fields.push('Comment' + c);
+            }
+
             issueData['CommentAuthor'+ c] = commentData.Author;
+            fields.push('CommentAuthor' + c);
           };
           cb(err, commentData);
         });
@@ -60,17 +81,12 @@ ghrepo.issues({
     })(issue.number, issueData);
 	}
   async.series(commentsReqs, function(err, results) {
-  	var fields = ['Issue Number', 'Issue Title', 'Issue Description',
-               'Date Opened', 'Date Closed'];
-   	for (var c = 1, clen = 30; c < clen; c++){
-   		fields.push('CommentAuthor' + c);
-   		fields.push('Comment' + c);
-   	}
     console.log('error', err);
     if (err) {
       console.error(err);
       process.exit(1);
     }
+    console.log(issueData);
     json2csv({ data: issuesData,
                fields: fields },
       function(err, data) {
