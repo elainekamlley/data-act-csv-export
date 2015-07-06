@@ -9,7 +9,8 @@
   "author": "",
   "license": "CC0",
   "dependencies": {
-    "json2csv": "^2.2.1"
+    "json2csv": "^2.2.1",
+    "underscore": "^1.8.3"
   },
   "devDependencies": {
     "async": "^1.0.0",

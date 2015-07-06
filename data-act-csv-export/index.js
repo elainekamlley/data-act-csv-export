@@ -1,6 +1,7 @@
 var async = require('async');
 var fs = require('fs');
 var github =require('octonode');
+var _ = require('underscore');
 
 var json2csv = require('json2csv');
 
@@ -48,7 +49,9 @@ ghrepo.issues({
           if (!comments) {
             cb(err, comments);
           }
+          console.log('number of comments', comments.length);
           for (var c = 0, clen = comments.length; c < clen; c++) {
+            console.log('comment', c, currentIssue.number);
             var comment = comments[c],
                 commentData = {
                   "Issue url": comment.issue_url,
@@ -59,9 +62,7 @@ ghrepo.issues({
               var commentBegin = comment.body.slice(0, 33000);
               var commentRest = comment.body.slice(33001);
               console.log('Begin comment');
-              console.log(commentBegin);
               console.log('Rest Comment');
-              console.log(commentRest);
               issueData['Comment'+ c] = commentBegin;
               issueData['Comment More' + c] =commentRest;
               fields.push('Comment' + c);
@@ -86,7 +87,8 @@ ghrepo.issues({
       console.error(err);
       process.exit(1);
     }
-    console.log(issueData);
+    fields = _.uniq(fields);
+    console.log(fields);
     json2csv({ data: issuesData,
                fields: fields },
       function(err, data) {
