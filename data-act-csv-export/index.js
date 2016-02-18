@@ -6,8 +6,10 @@ var _ = require('underscore');
 var json2csv = require('json2csv');
 
 var client = github.client(process.env.GITHUB_API_KEY);
-
-var ghrepo = client.repo('fedspendingtransparency/fedspendingtransparency.github.io');
+var repo = process.env.REPO;
+var project = repo.split('/')[1]
+var org = repo.split('/')[0]
+var ghrepo = client.repo(repo);
 
 ghrepo.issues({
  	state: 'all',
@@ -39,7 +41,7 @@ ghrepo.issues({
     (function(issueNumber, issueData) {
       commentsReqs.push(function(cb) {
         var currentIssue = client.issue(
-            'fedspendingtransparency/fedspendingtransparency.github.io',
+            repo,
             issueNumber);
         currentIssue.comments(function(err, body, headers) {
           var comments = body,
@@ -96,16 +98,15 @@ ghrepo.issues({
           console.error(err);
           process.exit(1);
         }
-        var fileName = './GitHub-export' + (new Date()).toJSON() + '.csv';
+        var fileName = './' + (org) + '-' + (project) + '-comments-export-' + (new Date()).toJSON() + '.csv';
         fs.writeFileSync(fileName, "");
         fs.appendFile(fileName, data, function (err) {
           if (err) {
             console.error(err);
             process.exit(1);
           }
-          console.log('It\'s saved!');
+          console.log(fileName.concat(' saved!'));
         });
     });
   });
 });
-
