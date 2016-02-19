@@ -26,14 +26,14 @@ First, you'll need to create a GitHub personal access token. That's because you'
 
 Make sure you're logged into GitHub, and follow [these directions](https://help.github.com/articles/creating-an-access-token-for-command-line-use/ "Create a GitHub personal access token") to create your token. When asked to _Select scopes_, accept the defaults.
 
-From the command line, run the script (make sure you're in the application folder):
+From the command line, run the script, passing in the GitHub repo and your personal access token as parameters (make sure you're in the application folder):
 
-        $ GITHUB_API_KEY=xxxxxxx REPO=githuborg/reponame node index.js
+        $ node index.js -r githuborg/reponame -k [GitHub personal access token]
 
 
-* ```GITHUB_API_KEY```: your GitHub personal access token
-* ```REPO```: the GitHub repository you're running the script against
+* ```-r```: the GitHub repository you're running the script against
+* ```-k```: your GitHub personal access token
 
 For example, running the following command will grab all issues and their associated comments from the [fedspendingtransparency/fedspendingtransparency.github.io](https://github.com/fedspendingtransparency/fedspendingtransparency.github.io) GitHub repository and write them to a .csv file called _fedspendingtransparency-fedspendingtransparency.github.io-comments-export-[timestamp].csv_
 
-        $ GITHUB_API_KEY=0e8530bsupersecretkey REPO=fedspendingtransparency/fedspendingtransparency.github.io node index.js
+        $ node index.js -r fedspendingtransparency/fedspendingtransparency.github.io -k 0e8530bsupersecretkey
