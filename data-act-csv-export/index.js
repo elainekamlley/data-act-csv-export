@@ -2,12 +2,35 @@ var async = require('async');
 var fs = require('fs');
 var github =require('octonode');
 var _ = require('underscore');
-
+var program = require('commander');
+var path = require('path');
+var pkg = require( path.join(__dirname, 'package.json') );
 var json2csv = require('json2csv');
 
-var client = github.client(process.env.GITHUB_API_KEY);
+program
+    .version(pkg.version)
+    .option('-r, --repo <github repository>',
+        'github repository in format [org-name/repo-name]')
+    .option('-k, --key <github api key>', 'github personal access token')
+    .parse(process.argv);
 
-var ghrepo = client.repo('fedspendingtransparency/fedspendingtransparency.github.io');
+//check parameters
+if (! program.repo) {
+    console.log('Missing GitHub repo! ' +
+        'Use the -h flag for more info about required parameters.');
+    process.exit();
+}
+if (! program.key) {
+    console.log('Missing GitHub API key! ' +
+        'Use the -h flag for more info about required parameters.');
+    process.exit();
+}
+
+var client = github.client(program.key);
+var repo = program.repo;
+var project = repo.split('/')[1];
+var org = repo.split('/')[0];
+var ghrepo = client.repo(repo);
 
 ghrepo.issues({
  	state: 'all',
@@ -39,7 +62,7 @@ ghrepo.issues({
     (function(issueNumber, issueData) {
       commentsReqs.push(function(cb) {
         var currentIssue = client.issue(
-            'fedspendingtransparency/fedspendingtransparency.github.io',
+            repo,
             issueNumber);
         currentIssue.comments(function(err, body, headers) {
           var comments = body,
@@ -96,16 +119,15 @@ ghrepo.issues({
           console.error(err);
           process.exit(1);
         }
-        var fileName = './GitHub-export' + (new Date()).toJSON() + '.csv';
+        var fileName = './' + (org) + '-' + (project) + '-comments-export-' + (new Date()).toJSON() + '.csv';
         fs.writeFileSync(fileName, "");
         fs.appendFile(fileName, data, function (err) {
           if (err) {
             console.error(err);
             process.exit(1);
           }
-          console.log('It\'s saved!');
+          console.log(fileName.concat(' saved!'));
         });
     });
   });
 });
-

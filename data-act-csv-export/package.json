@@ -10,7 +10,8 @@
   "license": "CC0",
   "dependencies": {
     "json2csv": "^2.2.1",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "commander": "^2.9.0"
   },
   "devDependencies": {
     "async": "^1.0.0",
